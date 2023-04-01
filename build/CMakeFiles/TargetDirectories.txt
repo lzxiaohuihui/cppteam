@@ -1,3 +1,0 @@
-/home/lzh/Downloads/huawei2023/LinuxRelease/cppPro/build/CMakeFiles/rebuild_cache.dir
-/home/lzh/Downloads/huawei2023/LinuxRelease/cppPro/build/CMakeFiles/edit_cache.dir
-/home/lzh/Downloads/huawei2023/LinuxRelease/cppPro/build/CMakeFiles/main.dir
