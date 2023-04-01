@@ -45,19 +45,26 @@ public:
 
         v = v < 0 ? -v : v;
 
-        double x = x0 + v * cosTheta * t - 0.5 * w * v * sinTheta * t * t;
-        double y = y0 + v * sinTheta * t + 0.5 * w * v * cosTheta * t * t;
+//        double x = x0 + v * cosTheta * t - 0.5 * w * v * sinTheta * t * t;
+//        double y = y0 + v * sinTheta * t + 0.5 * w * v * cosTheta * t * t;
+        double x = x0 + v * cosTheta * t ;
+        double y = y0 + v * sinTheta * t ;
 
         return {x, y};
     }
 
-    static bool isCollisionWall(Robot robot1) {
+    static bool isCollisionWall(Robot robot, const vector<vector<int>>& data) {
         double eps = 1.1;
-        for (double t = 0.0; t < 1.0; t += 0.04) {
-            if (getPosition(robot1, t)[0] < 0.5 || getPosition(robot1, t)[0] > 49.5) {
+        for (double t = 0.0; t < 0.1; t += 0.02) {
+            if (getPosition(robot, t)[0] < 0.5 || getPosition(robot, t)[0] > 49.5) {
                 return true;
             }
-            if (getPosition(robot1, t)[1] < 0.5 || getPosition(robot1, t)[1] > 49.5) {
+            if (getPosition(robot, t)[1] < 0.5 || getPosition(robot, t)[1] > 49.5) {
+                return true;
+            }
+            vector<double> p = getPosition(robot, t);
+            vector<int> pos = {(int)p[0], (int)p[1]};
+            if (data[pos[0]][pos[1]] == 1){
                 return true;
             }
         }
@@ -82,7 +89,7 @@ public:
     }
 
     static double getDistance(double x1, double y1, double x2, double y2) {
-        return (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
+        return sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
     }
 
     static double getDistance(Robot robot1, Robot robot2) {
@@ -91,6 +98,9 @@ public:
 
     static double getDistance(Robot robot, Workbench workbench) {
         return getDistance({robot.getX(), robot.getY()}, {workbench.getX(), workbench.getY()});
+    }
+    static double getDistance(Robot robot, double p1, double p2) {
+        return getDistance({robot.getX(), robot.getY()}, {p1, p2});
     }
 
     static double getDistance(vector<double> p1, vector<double> p2) {
@@ -127,6 +137,18 @@ public:
         double cosTheta = cos(robot1.getOrientation());
         double sinTheta = sin(robot1.getOrientation());
         return dx * cosTheta + dy * sinTheta;
+    }
+
+    static double getDp(Robot robot1, double p1, double p2){
+        double cosTheta = cos(robot1.getOrientation());
+        double sinTheta = sin(robot1.getOrientation());
+
+        double dx = p1 - robot1.getX();
+        double dy = p2 - robot1.getY();
+        return dx * cosTheta + dy * sinTheta;
+    }
+    static double getDpCos(Robot robot1, double p1, double p2){
+        return getDp(robot1, p1, p2) / getDistance(robot1, p1, p2);
     }
 
     static double getRobotDp(Robot robot1, Robot robot2) {

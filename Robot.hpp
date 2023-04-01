@@ -95,10 +95,14 @@ private:
      */
     double y;
 
-    double linearKp = 6.0;
+    vector<vector<double>> path;
+
+    int path_step;
+
+    double linearKp = 5.0;
     double linearKi = 0.00;
     double linearKd = 0.02;
-    double angularKp = 5.0;
+    double angularKp = 10.0;
     double angularKi = 0.00;
     double angularKd = 0.15;
     double linearIntegral = 0.0, linearLastError;
@@ -106,14 +110,14 @@ private:
 
 public:
 
-    void pidClear(){
+    void pidClear() {
         linearIntegral = 0.0;
         linearLastError = 0.0;
         angularIntegral = 0.0;
         angularLastError = 0.0;
     }
 
-    void updateRobot(std::string line){
+    void updateRobot(std::string line) {
         vector<string> parts = split(line, ' ');
         setWorkbenchId(stoi(parts[0]));
         setCarry(stoi(parts[1]));
@@ -143,7 +147,7 @@ public:
     }
 
 
-    std::vector<std::string> pidMove(double targetX, double targetY){
+    std::vector<std::string> pidMove(double targetX, double targetY) {
         double distance = sqrt(pow(targetX - x, 2) + pow(targetY - y, 2));
         if (distance < 0.4) return {};
         double cosTheta = cos(orientation);
@@ -174,10 +178,50 @@ public:
         return res;
     }
 
+    vector<string> pathMove() {
+        vector<string> res;
+        for (; path_step < path.size(); ++path_step) {
+            double targetX = path[path_step][0];
+            double targetY = path[path_step][1];
+//            fprintf(stderr, "(x:%lf, y%lf)->(target_x: %lf, target_y: %lf)\n", x, y, targetX, targetY);
+            double distance = sqrt(pow(targetX - x, 2) + pow(targetY - y, 2));
+            if (distance <= 0.5 && path_step < path.size()-1) continue;
+//            if (distance < 0.4 && path_step == path.size()-1) return {};
+            double cosTheta = cos(orientation);
+            double sinTheta = sin(orientation);
+            double dp = (targetX - x) * cosTheta + (targetY - y) * sinTheta;
+            // cp > 0 目标点在当前的逆时针方向
+            double cp = (targetY - y) * cosTheta - (targetX - x) * sinTheta;
+            cp = cp == 0 ? 0 : cp / abs(cp);
+            double angle = acos(dp / sqrt(pow(targetX - x, 2) + pow(targetY - y, 2) + 0.001));
+
+            double linearError = distance * cos(angle);
+            linearIntegral += linearError;
+            angularIntegral += angle;
+            double linearDerivative = linearError - linearLastError;
+            double angularDerivative = angle - angularLastError;
+            linearLastError = linearError;
+            angularLastError = angle;
+            double linearVelocity = linearKp * linearError + linearKi * linearIntegral + linearKd * linearDerivative;
+            double angularVelocity = angularKp * angle + angularKi * angularIntegral + angularKd * angularDerivative;
+            // limit linear velocity to [-2, 6]
+            linearVelocity = max(1.0, min(6.0, linearVelocity));
+
+            // limit angular velocity to [-π, π]
+            angularVelocity = max(-PI, min(PI, angularVelocity));
+            if (path_step < path.size()-2) linearVelocity = min(4.0, linearVelocity);
+            res.push_back("forward " + to_string(robotId) + " " + to_string(linearVelocity) + "\n");
+            res.push_back("rotate " + to_string(robotId) + " " + to_string(cp * angularVelocity) + "\n");
+            return res;
+        }
+
+    }
+
     int getWorkbenchId() const {
         return workbenchId;
     }
-    void setWorkbenchId(int a){
+
+    void setWorkbenchId(int a) {
         workbenchId = a;
     }
 
@@ -300,6 +344,18 @@ public:
 
     double getY() {
         return y;
+    }
+
+    void setPath(const vector<vector<double>> &_path) {
+        path = _path;
+        path_step = 1;
+    }
+    bool hasPath(){
+        return !path.empty();
+    }
+
+    vector<double> getCurTarget(){
+        return {path[path_step][0], path[path_step][1]};
     }
 };
 

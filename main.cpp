@@ -41,6 +41,7 @@ int main() {
     readMapOK();
     puts("OK");
     fflush(stdout);
+    work->init();
     int frameID, k, money;
     while (scanf("%d", &frameID) != EOF) {
         scanf("%d", &money);
@@ -49,7 +50,8 @@ int main() {
         readFrameOK();
         printf("%d\n", frameID);
 
-        vector<string> orders = work->schedulingRobot(frameID);
+//        vector<string> orders = work->schedulingRobot(frameID);
+        vector<string> orders = work->schedulingTargetWorkbench(frameID);
 
         for (const auto &item: orders){
             printf("%s", item.data());

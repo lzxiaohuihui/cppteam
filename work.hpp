@@ -13,13 +13,15 @@
 #include "FindNearestWorkBenchService.hpp"
 #include "CollisionService.hpp"
 #include "BuyAndSellService.hpp"
+#include "aStar.hpp"
+#include "CollisionWallService.hpp"
 
 
 class Work {
 private:
     int money;
 
-    char DATA[100][100];
+    vector<vector<int>> maze;
 
     vector<Robot*> robots;
     vector<Workbench*> workbenches;
@@ -29,18 +31,23 @@ private:
 
     BuyAndSellService* buyAndSellService = new BuyAndSellService;
     FindNearestWorkBenchService* findNearestWorkBenchService = new FindNearestWorkBenchService();
-    CollisionService* collisionService = new CollisionService();
+    CollisionWallService* collisionService ;
+    aStar* pathPlanning;
 
 
 
 public:
+
+    Work(){
+        maze = vector<vector<int>>(100, vector<int>(100, 0));
+    }
 
     vector<string> schedulingRobot(int frameId){
         vector<string> orders;
 
         for (const auto &robot: robots){
             // 有没有目标都更新目标
-            if (!robot->hasTarget() || true){
+            if (!robot->hasTarget() || false){
                 // 没有货
                 if (robot->getCarry() == 0) {
                     findNearestWorkBenchService->findWorkbenchBuy(robot->getRobotId(), robots, workbenches);
@@ -103,6 +110,41 @@ public:
         return orders;
     }
 
+
+    vector<string> schedulingTargetWorkbench(int frameId){
+        vector<string> orders;
+
+        if (!robots[0]->hasPath()){
+//            int start_x = (int)robots[0]->getX() * 2;
+//            int start_y = (int)robots[0]->getY() * 2;
+//            int end_x = (int)workbenches[4]->getX() * 2;
+//            int end_y = (int)workbenches[4]->getY() * 2;
+            double start_x = robots[0]->getX();
+            double start_y = robots[0]->getY();
+            double end_x = workbenches[20]->getX();
+            double end_y = workbenches[20]->getY();
+            vector<vector<double>> path;
+
+            bool succeed = pathPlanning->find_path(start_x, start_y, end_x, end_y, path);
+            if (!succeed) return orders;
+
+            robots[0]->setPath(path);
+        }
+
+        vector<string> res = robots[0]->pathMove();
+        orders.insert(orders.end(), res.begin(), res.end());
+
+//        vector<string> a = collisionService->avoid(robots, workbenches);
+//        orders.insert(orders.end(), a.begin(), a.end());
+        return orders;
+
+    }
+
+    void init() {
+        pathPlanning = new aStar(maze);
+        collisionService = new CollisionWallService(maze);
+    }
+
     static bool isEnoughTime(Robot& robot, Workbench workbench, int frameId){
         return Util::getDistance(robot, workbench) / 5.5 < (9000 - frameId) / 50.0;
     }
@@ -110,15 +152,19 @@ public:
     void setDataLine(int num, const string& line){
         for(int i = 0; i < 100; ++i){
             char c = line[i];
-            DATA[num][i] = c;
             // 数字1-9 的 ASCII
             // 添加工作台信息
+
+            if (c == '#'){
+                maze[i][99-num] = 1;
+            }
+
             if (c >= 49 && c <= 57){
-                workbenches.push_back(new Workbench(countWorkbench++, c-'0', num, i));
+                workbenches.push_back(new Workbench(countWorkbench++, c-'0', i/2.0, (99-num)/2.0));
             }
 
             if (c == 'A'){
-                robots.push_back(new Robot(countRobot++, num, i));
+                robots.push_back(new Robot(countRobot++, i/2.0, (99-num)/2.0));
             }
 
         }

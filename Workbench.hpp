@@ -80,9 +80,7 @@ private:
 public:
     
     void updateWorkbench(const string& line) {
-//        fprintf(stderr, "%s", line.data());
         vector<string> parts = split(line, ' ');
-//        fprintf(stderr, "parts数组 大小%d\n", (int)parts.size());
         setType(stoi(parts[0]));
         setX(stod(parts[1]));
         setY(stod(parts[2]));
@@ -91,7 +89,7 @@ public:
         setStatus(stoi(parts[5]));
     }
 
-    vector<string> split(string s, char delimiter) {
+    static vector<string> split(string s, char delimiter) {
         vector<std::string> tokens;
         istringstream iss(s);
         string token;
@@ -101,7 +99,7 @@ public:
         return tokens;
     }
 
-    Workbench(int id, int type, double x, double y):type(type),x(x), y(y),workbenchId(id) {
+    Workbench(int id, int type, double x, double y):workbenchId(id),type(type), x(x),y(y) {
         int r = 0;
         if (type == 4) r = 2 | 4;
         if (type == 5) r = 2 | 8;
