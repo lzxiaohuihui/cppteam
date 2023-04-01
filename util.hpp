@@ -51,9 +51,21 @@ public:
         return {x, y};
     }
 
+    static bool isCollisionWall(Robot robot1) {
+        double eps = 1.1;
+        for (double t = 0.0; t < 1.0; t += 0.04) {
+            if (getPosition(robot1, t)[0] < 0.5 || getPosition(robot1, t)[0] > 49.5) {
+                return true;
+            }
+            if (getPosition(robot1, t)[1] < 0.5 || getPosition(robot1, t)[1] > 49.5) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     static bool isCollision(Robot robot1, Robot robot2) {
         double eps = 1.1;
-
         for (double t = 0.0; t < 1.0; t += 0.04) {
             if (getDistance(getPosition(robot1, t), getPosition(robot2, t)) < eps) {
                 return true;
@@ -124,6 +136,8 @@ public:
         double sinTheta = sin(robot2.getOrientation());
         return cosAlpha * cosTheta + sinAlpha * sinTheta;
     }
+
+
 
     static double getDpCos(Robot robot1, Robot robot2) {
         return getDp(robot1, robot2) / getDistance(robot1, robot2);

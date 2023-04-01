@@ -97,7 +97,7 @@ public:
         }
 
         // 避免碰撞
-        vector<string> a = collisionService->avoid(robots);
+        vector<string> a = collisionService->avoid(robots, workbenches);
         orders.insert(orders.end(), a.begin(), a.end());
 
         return orders;

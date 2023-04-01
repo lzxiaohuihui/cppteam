@@ -112,7 +112,7 @@ public:
         this->raw = r;
     }
 
-    int getType() {
+    int getType() const {
         return type;
     }
 

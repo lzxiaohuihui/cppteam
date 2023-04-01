@@ -63,10 +63,16 @@ public:
         std::sort(workbenchList.begin(), workbenchList.end(), [robot](const Workbench* o1, const Workbench* o2){
             double d1 = Util::getDistance(o1->getX(), o1->getY(), robot->getX(), robot->getY());
             double d2 = Util::getDistance(o2->getX(), o2->getY(), robot->getX(), robot->getY());
-            return d1 < d2;
+            bool query1 = o1->getType() == 4 || o1->getType() == 5 || o1->getType() == 6;
+            bool query2 = o2->getType() == 4 || o2->getType() == 5 || o2->getType() == 6;
+
+            if (o1->getType() == o2->getType()) return d1 < d2;
+            else{
+                if (query1 && query2) return d1 < d2;
+                else if (query1 && !query2) return true;
+                return false;
+            }
         });
-
-
         if (workbenchList.empty()) {
             return;
         }

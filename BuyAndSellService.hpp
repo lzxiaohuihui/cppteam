@@ -6,6 +6,8 @@
 using namespace std;
 
 
+int originPrices[] = {0, 6000, 7600, 9200,22500,2500,27500,10500};
+int sellTimes = 0;
 class BuyAndSellService {
 
 public :
@@ -40,9 +42,12 @@ public :
         if (hasMaterialNum(robot->getCarry(), workbench->getRawMaterialStatus())) {
             return false;
         }
-//        losePriceSum += (1 - robot->getCollisionValue()) * originPrices[robot->getCarry()] * robot->getTimeValue();
+        losePriceSum += (1 - robot->getCollisionValue()) * originPrices[robot->getCarry()] * robot->getTimeValue();
 //        System->err->printf("第%d次出售-------时间价值系数: %f -------- 碰撞价值系数: %f ------- 碰撞损失： %f\n"
 //                ,++sellTimes, robot->getTimeValue(), robot->getCollisionValue(), losePriceSum);
+//        fprintf(stderr, "第%d次出售-------时间价值系数: %f -------- 碰撞价值系数: %f ------- 碰撞损失： %f\n",
+//               ++sellTimes, robot->getTimeValue(), robot->getCollisionValue(), losePriceSum
+//               );
         workbench->setSellLock(false, robot->getCarry());
         workbench->setRawMaterialStatus(Util::addWorkbenchStatus(robot->getCarry(), workbench));
         robot->setCarry(0);
