@@ -126,8 +126,8 @@ public:
 //            }
 
             res.push_back({cur_x/2.0 + 0.25, cur_y/2.0 + 0.25});
-            fprintf(stderr, "(%lf, %lf)", cur_x/2.0 + 0.25, cur_y/2.0 + 0.25);
-            if (i > 0) fprintf(stderr, " -> ");
+//            fprintf(stderr, "(%lf, %lf)", cur_x/2.0 + 0.25, cur_y/2.0 + 0.25);
+//            if (i > 0) fprintf(stderr, " -> ");
         }
 
         return true;

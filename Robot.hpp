@@ -99,12 +99,12 @@ private:
 
     int path_step;
 
-    double linearKp = 1.0;
+    double linearKp = 5.0;
     double linearKi = 0.00;
-    double linearKd = 0.00;
-    double angularKp = 30.0;
+    double linearKd = 0.02;
+    double angularKp = 6.0;
     double angularKi = 0.00;
-    double angularKd = 0.00;
+    double angularKd = 0.15;
     double linearIntegral = 0.0, linearLastError;
     double angularIntegral = 0.0, angularLastError;
 
@@ -115,6 +115,7 @@ public:
         linearLastError = 0.0;
         angularIntegral = 0.0;
         angularLastError = 0.0;
+        path_step = 0;
     }
 
     void updateRobot(std::string line) {
@@ -180,13 +181,18 @@ public:
 
     vector<string> pathMove() {
         vector<string> res;
+        int n = path.size();
+//        if (path_step == n-2){
+//            return pidMove(path[n-1][0], path[n-1][1]);
+//        }
         for (; path_step < path.size(); ++path_step) {
             double targetX = path[path_step][0];
             double targetY = path[path_step][1];
-            fprintf(stderr, "(x:%lf, y%lf)->(target_x: %lf, target_y: %lf)\n", x, y, targetX, targetY);
+//            fprintf(stderr, "(x:%lf, y%lf)->(target_x: %lf, target_y: %lf)\n", x, y, targetX, targetY);
+//            if (robotId == 0) fprintf(stderr, "%d robot step: %d\n", robotId, path_step);
             double distance = sqrt(pow(targetX - x, 2) + pow(targetY - y, 2));
             if (distance <= 0.5 && path_step < path.size()-1) continue;
-//            if (distance < 0.4 && path_step == path.size()-1) return {};
+            if (distance < 0.4 && path_step == path.size()-1) return {};
             double cosTheta = cos(orientation);
             double sinTheta = sin(orientation);
             double dp = (targetX - x) * cosTheta + (targetY - y) * sinTheta;
@@ -195,7 +201,8 @@ public:
             cp = cp == 0 ? 0 : cp / abs(cp);
             double angle = acos(dp / sqrt(pow(targetX - x, 2) + pow(targetY - y, 2) + 0.001));
 
-            double linearError = distance * tan(PI/2 - angle);
+//            double linearError = distance * tan(PI/2 - angle);
+            double linearError = distance * cos(angle);
             linearIntegral += linearError;
             angularIntegral += angle;
             double linearDerivative = linearError - linearLastError;
@@ -210,11 +217,13 @@ public:
             // limit angular velocity to [-π, π]
             angularVelocity = max(-PI, min(PI, angularVelocity));
 //            if (path_step < path.size()-2) linearVelocity = max(4.0, linearVelocity);
-//            if (abs(angularVelocity) > PI/2) linearVelocity /= 1.5;
+            if (abs(angularVelocity) > PI/2) linearVelocity /= 2.0;
+//            if (path_step < n - 2 && distance < 1.0) linearVelocity /= 2.0;
             res.push_back("forward " + to_string(robotId) + " " + to_string(linearVelocity) + "\n");
             res.push_back("rotate " + to_string(robotId) + " " + to_string(cp * angularVelocity) + "\n");
             return res;
         }
+        return res;
 
     }
 
@@ -349,7 +358,7 @@ public:
 
     void setPath(const vector<vector<double>> &_path) {
         path = _path;
-        path_step = 1;
+        path_step = 0;
     }
     bool hasPath(){
         return !path.empty();

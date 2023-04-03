@@ -111,8 +111,9 @@ int main() {
     }
 
 
-    double start_x = 24.25, start_y = 48.75, end_x = 43.25, end_y = 9.75;
-//    double start_x = 28.25, start_y = 25.75, end_x = 10.25, end_y = 24.75;
+//    double start_x = 24.25, start_y = 48.75, end_x = 43.25, end_y = 9.75;
+//    double start_x = 28.25, start_y = 44.75, end_x = 10.25, end_y = 24.75;
+    double start_x = 12.25, start_y = 44.75, end_x = 18.25, end_y = 48.75;
     vector<Node *> path = find_path(maze, start_x, start_y, end_x, end_y);
     if (path.empty()) {
         cout << "No path found" << endl;
@@ -123,7 +124,7 @@ int main() {
 
     vector<vector<int>> offsets = {{1,0}, {0,1}, {-1,0}, {0,-1}};
     set<Node*> pathSet(path.begin(), path.end());
-    for (int i = path.size() - 1; i >= 0; --i) {
+    for (int i = path.size() - 2; i >= 0; --i) {
         int cur_x = path[i]->x;
         int cur_y = path[i]->y;
 
@@ -133,25 +134,25 @@ int main() {
                 cur_y -= item[1];
             }
         }
-        int pre_x = -1;
-        int pre_y = -1;
-        int next_x = -1;
-        int next_y = -1;
-        if(i < path.size()-1) {
-            pre_x=path[i + 1]->x;
-            pre_y=path[i + 1]->y;
-        }
-        if(i > 1) {
-            next_x=path[i - 1]->x;
-            next_y=path[i - 1]->y;
-        }
-        int sum = 0;
-        sum += abs(pre_x - cur_x) + abs(pre_y - cur_y);
-        sum += abs(next_x - cur_x) + abs(next_y - cur_y);
-        if (sum <= 2) {
-            cout << sum << endl;
-            continue;
-        }
+//        int pre_x = -1;
+//        int pre_y = -1;
+//        int next_x = -1;
+//        int next_y = -1;
+//        if(i < path.size()-1) {
+//            pre_x=path[i + 1]->x;
+//            pre_y=path[i + 1]->y;
+//        }
+//        if(i > 1) {
+//            next_x=path[i - 1]->x;
+//            next_y=path[i - 1]->y;
+//        }
+//        int sum = 0;
+//        sum += abs(pre_x - cur_x) + abs(pre_y - cur_y);
+//        sum += abs(next_x - cur_x) + abs(next_y - cur_y);
+//        if (sum <= 2) {
+//            cout << sum << endl;
+//            continue;
+//        }
 
         cout << "(" << cur_x/2.0 + 0.25 << ", " << cur_y/2.0 + 0.25 << ")";
         if (i > 0) cout << " -> ";

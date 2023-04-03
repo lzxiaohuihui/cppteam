@@ -42,16 +42,20 @@ int main() {
     puts("OK");
     fflush(stdout);
     work->init();
-    int frameID, k, money;
+    int frameID, k, money, lastFrameId;
     while (scanf("%d", &frameID) != EOF) {
         scanf("%d", &money);
         scanf("%d ", &k);
 
         readFrameOK();
         printf("%d\n", frameID);
+        if (frameID - lastFrameId != 1) {
+            fprintf(stderr, "from %d skipped to %d.\n", lastFrameId, frameID);
+        }
+        lastFrameId = frameID;
 
-//        vector<string> orders = work->schedulingRobot(frameID);
-        vector<string> orders = work->schedulingTargetWorkbench(frameID);
+        vector<string> orders = work->schedulingRobot(frameID);
+//        vector<string> orders = work->schedulingTargetWorkbench(frameID);
 
         for (const auto &item: orders){
             printf("%s", item.data());

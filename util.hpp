@@ -27,7 +27,7 @@ public:
 
 
     static int addWorkbenchStatus(int num, Workbench* workbench) {
-        if (pow(2, num) + workbench->getRawMaterialStatus() == workbench->getRaw() && workbench->getRaw() == -1) {
+        if (pow(2, num) + workbench->getRawMaterialStatus() == workbench->getRaw() && workbench->getRpt() == -1) {
             return 0;
         }
         return (int) (pow(2, num) + workbench->getRawMaterialStatus());

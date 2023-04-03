@@ -158,7 +158,7 @@ public:
         this->status = s;
     }
 
-    int getWorkbenchId() {
+    int getWorkbenchId() const{
         return workbenchId;
     }
 
