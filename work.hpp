@@ -23,37 +23,36 @@ private:
 
     vector<vector<int>> maze;
 
-    vector<Robot*> robots;
-    vector<Workbench*> workbenches;
+    vector<Robot *> robots;
+    vector<Workbench *> workbenches;
 
     int countRobot = 0;
     int countWorkbench = 0;
 
-    BuyAndSellService* buyAndSellService = new BuyAndSellService;
-    FindNearestWorkBenchService* findNearestWorkBenchService = new FindNearestWorkBenchService();
-    CollisionWallService* collisionService ;
-    aStar* pathPlanning;
-
+    BuyAndSellService *buyAndSellService = new BuyAndSellService;
+    FindNearestWorkBenchService *findNearestWorkBenchService = new FindNearestWorkBenchService();
+    CollisionWallService *collisionService;
+    aStar *pathPlanning;
 
 
 public:
 
-    Work(){
+    Work() {
         maze = vector<vector<int>>(100, vector<int>(100, 0));
     }
 
-    vector<string> schedulingRobot(int frameId){
+    vector<string> schedulingRobot(int frameId) {
         vector<string> orders;
 
-        for (const auto &robot: robots){
+        for (const auto &robot: robots) {
             // 有没有目标都更新目标
-            if (!robot->hasTarget() || false){
+            if (!robot->hasTarget() || false) {
                 // 没有货
                 if (robot->getCarry() == 0) {
                     findNearestWorkBenchService->findWorkbenchBuy(robot->getRobotId(), robots, workbenches);
                 }
                     // 有货
-                else{
+                else {
                     findNearestWorkBenchService->findWorkbenchSell(robot->getRobotId(), robots, workbenches);
                 }
             }
@@ -63,27 +62,27 @@ public:
                 // 机器人当前所处的工作台
                 int wId = robot->getWorkbenchId();
                 // 买货
-                if (robot->getCarry() == 0){
+                if (robot->getCarry() == 0) {
                     bool isBuy = buyAndSellService->buy(robot, workbenches[wId]);
-                    if (isBuy){
+                    if (isBuy) {
                         // 买了货，机器人去新的目的地卖货
                         findNearestWorkBenchService->findWorkbenchSell(robot->getRobotId(), robots, workbenches);
                         // 判断够不够时间，然后再去买
-                        if (robot->hasTarget() && isEnoughTime(*robot, *workbenches[robot->getTargetWorkBenchId()], frameId)){
+                        if (robot->hasTarget() &&
+                            isEnoughTime(*robot, *workbenches[robot->getTargetWorkBenchId()], frameId)) {
                             orders.push_back("buy " + to_string(robot->getRobotId()) + "\n");
-                        }
-                        else {
+                        } else {
                             buyAndSellService->cancelBuy(robot);
                         }
                     }
 
                 }
                     // 卖货
-                else{
+                else {
                     bool isSell = buyAndSellService->sell(robot, workbenches[wId]);
-                    if (isSell){
+                    if (isSell) {
                         robot->pidClear();
-                        orders.push_back("sell "+ to_string(robot->getRobotId()) + "\n");
+                        orders.push_back("sell " + to_string(robot->getRobotId()) + "\n");
                         // 卖了货，机器人去新的地方买货
                         findNearestWorkBenchService->findWorkbenchBuy(robot->getRobotId(), robots, workbenches);
                     }
@@ -92,7 +91,7 @@ public:
             }
 
             // 根据目标前往目的地
-            if(robot->hasTarget()){
+            if (robot->hasTarget()) {
                 double workbenchX = workbenches[robot->getTargetWorkBenchId()]->getX();
                 double workbenchY = workbenches[robot->getTargetWorkBenchId()]->getY();
                 // 返回该机器人到目的地需要怎么走
@@ -115,10 +114,6 @@ public:
         vector<string> orders;
 
         if (!robots[0]->hasPath()){
-//            int start_x = (int)robots[0]->getX() * 2;
-//            int start_y = (int)robots[0]->getY() * 2;
-//            int end_x = (int)workbenches[4]->getX() * 2;
-//            int end_y = (int)workbenches[4]->getY() * 2;
             double start_x = robots[0]->getX();
             double start_y = robots[0]->getY();
             double end_x = workbenches[20]->getX();
@@ -134,8 +129,6 @@ public:
         vector<string> res = robots[0]->pathMove();
         orders.insert(orders.end(), res.begin(), res.end());
 
-//        vector<string> a = collisionService->avoid(robots, workbenches);
-//        orders.insert(orders.end(), a.begin(), a.end());
         return orders;
 
     }

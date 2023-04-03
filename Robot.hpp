@@ -99,12 +99,12 @@ private:
 
     int path_step;
 
-    double linearKp = 5.0;
+    double linearKp = 1.0;
     double linearKi = 0.00;
-    double linearKd = 0.02;
-    double angularKp = 10.0;
+    double linearKd = 0.00;
+    double angularKp = 30.0;
     double angularKi = 0.00;
-    double angularKd = 0.15;
+    double angularKd = 0.00;
     double linearIntegral = 0.0, linearLastError;
     double angularIntegral = 0.0, angularLastError;
 
@@ -168,9 +168,9 @@ public:
         double linearVelocity = linearKp * linearError + linearKi * linearIntegral + linearKd * linearDerivative;
         double angularVelocity = angularKp * angle + angularKi * angularIntegral + angularKd * angularDerivative;
         // limit linear velocity to [-2, 6]
-        linearVelocity = max(2.0, min(6.0, linearVelocity));
+//        linearVelocity = max(2.0, min(6.0, linearVelocity));
         // limit angular velocity to [-π, π]
-        angularVelocity = max(-PI, min(PI, angularVelocity));
+//        angularVelocity = max(-PI, min(PI, angularVelocity));
 
         vector<string> res;
         res.push_back("forward " + to_string(robotId) + " " + to_string(linearVelocity) + "\n");
@@ -183,7 +183,7 @@ public:
         for (; path_step < path.size(); ++path_step) {
             double targetX = path[path_step][0];
             double targetY = path[path_step][1];
-//            fprintf(stderr, "(x:%lf, y%lf)->(target_x: %lf, target_y: %lf)\n", x, y, targetX, targetY);
+            fprintf(stderr, "(x:%lf, y%lf)->(target_x: %lf, target_y: %lf)\n", x, y, targetX, targetY);
             double distance = sqrt(pow(targetX - x, 2) + pow(targetY - y, 2));
             if (distance <= 0.5 && path_step < path.size()-1) continue;
 //            if (distance < 0.4 && path_step == path.size()-1) return {};
@@ -195,7 +195,7 @@ public:
             cp = cp == 0 ? 0 : cp / abs(cp);
             double angle = acos(dp / sqrt(pow(targetX - x, 2) + pow(targetY - y, 2) + 0.001));
 
-            double linearError = distance * cos(angle);
+            double linearError = distance * tan(PI/2 - angle);
             linearIntegral += linearError;
             angularIntegral += angle;
             double linearDerivative = linearError - linearLastError;
@@ -205,11 +205,12 @@ public:
             double linearVelocity = linearKp * linearError + linearKi * linearIntegral + linearKd * linearDerivative;
             double angularVelocity = angularKp * angle + angularKi * angularIntegral + angularKd * angularDerivative;
             // limit linear velocity to [-2, 6]
-            linearVelocity = max(1.0, min(6.0, linearVelocity));
+            linearVelocity = max(2.0, min(6.0, linearVelocity));
 
             // limit angular velocity to [-π, π]
             angularVelocity = max(-PI, min(PI, angularVelocity));
-            if (path_step < path.size()-2) linearVelocity = min(4.0, linearVelocity);
+//            if (path_step < path.size()-2) linearVelocity = max(4.0, linearVelocity);
+//            if (abs(angularVelocity) > PI/2) linearVelocity /= 1.5;
             res.push_back("forward " + to_string(robotId) + " " + to_string(linearVelocity) + "\n");
             res.push_back("rotate " + to_string(robotId) + " " + to_string(cp * angularVelocity) + "\n");
             return res;

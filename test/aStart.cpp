@@ -16,7 +16,11 @@ int heuristic(int x1, int y1, int x2, int y2) {
     return abs(x1 - x2) + abs(y1 - y2);
 }
 
-vector<Node *> find_path(vector<vector<int>> &maze, int start_x, int start_y, int end_x, int end_y) {
+vector<Node *> find_path(vector<vector<int>> &maze, double x1, double y1, double x2, double y2) {
+    int start_x = (int) ((x1 - 0.25)*2);
+    int start_y = (int) ((y1 - 0.25)*2);
+    int end_x = (int) ((x2 - 0.25)*2);
+    int end_y = (int) ((y2 - 0.25)*2);
     vector<Node *> path;
     int rows = maze.size(), cols = maze[0].size();
     priority_queue<Node *, vector<Node *>, function<bool(Node *, Node *)>> open(
@@ -40,7 +44,7 @@ vector<Node *> find_path(vector<vector<int>> &maze, int start_x, int start_y, in
         closed[current->x][current->y] = true;
         for (int i = -1; i <= 1; ++i) {
             for (int j = -1; j <= 1; ++j) {
-                // if (i + j != 1 && i + j != -1) continue;
+                 if (i + j != 1 && i + j != -1) continue;
                 if (i == 0 && j == 0) continue;
                 int x = current->x + i, y = current->y + j;
                 if (x < 0 || x >= rows || y < 0 || y >= cols || maze[x][y] == 1 || closed[x][y]) continue;
@@ -102,31 +106,56 @@ int main() {
                     sum += maze[x][y];
                 }
             }
-            maze2[i / 2][j / 2] = sum>0?1:0;
+            maze2[i / 2][j / 2] = sum > 0 ? 1 : 0;
         }
     }
 
 
-    // int start_x = 24.25 * 4, start_y = 48.75 * 4, end_x = 17.25 * 4, end_y = 44.75 * 4;
-    int start_x = 24.25 * 4/4, start_y = 48.75 * 4/4, end_x = 1.25 * 4 / 4, end_y = 48.75 * 4 / 4;
-    vector<Node *> path = find_path(maze2, start_x, start_y, end_x, end_y);
+    double start_x = 24.25, start_y = 48.75, end_x = 43.25, end_y = 9.75;
+//    double start_x = 28.25, start_y = 25.75, end_x = 10.25, end_y = 24.75;
+    vector<Node *> path = find_path(maze, start_x, start_y, end_x, end_y);
     if (path.empty()) {
         cout << "No path found" << endl;
         return 0;
     }
 
-    grid[start_x][start_y] = 'S';
+    grid[start_x * 2][start_y * 2] = 'S';
+
+    vector<vector<int>> offsets = {{1,0}, {0,1}, {-1,0}, {0,-1}};
+    set<Node*> pathSet(path.begin(), path.end());
     for (int i = path.size() - 1; i >= 0; --i) {
         int cur_x = path[i]->x;
         int cur_y = path[i]->y;
-        int offset = 0;
-        if(maze[cur_x*2][cur_y*2-1] == 1){
-            offset = 1;
+
+        for (const auto &item: offsets){
+            if (maze[cur_x+item[0]][cur_y+item[1]] == 1 && maze[cur_x-item[0]][cur_y-item[1]] != 1){
+                cur_x -= item[0];
+                cur_y -= item[1];
+            }
         }
-        cur_y += offset;
-        cout << "(" << cur_x << ", " << cur_y << ")";
+        int pre_x = -1;
+        int pre_y = -1;
+        int next_x = -1;
+        int next_y = -1;
+        if(i < path.size()-1) {
+            pre_x=path[i + 1]->x;
+            pre_y=path[i + 1]->y;
+        }
+        if(i > 1) {
+            next_x=path[i - 1]->x;
+            next_y=path[i - 1]->y;
+        }
+        int sum = 0;
+        sum += abs(pre_x - cur_x) + abs(pre_y - cur_y);
+        sum += abs(next_x - cur_x) + abs(next_y - cur_y);
+        if (sum <= 2) {
+            cout << sum << endl;
+            continue;
+        }
+
+        cout << "(" << cur_x/2.0 + 0.25 << ", " << cur_y/2.0 + 0.25 << ")";
         if (i > 0) cout << " -> ";
-        grid[cur_x * 2][cur_y * 2] = '*';
+        grid[cur_x][cur_y] = '*';
     }
     cout << endl;
     cout << path.size() << endl;
