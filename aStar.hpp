@@ -43,7 +43,7 @@ public:
 
     }
 
-    bool find_path(double x1, double y1, double x2, double y2, vector<vector<double>>& res) {
+    bool find_path(double x1, double y1, double x2, double y2, vector<vector<double>>& res, bool isCarry) {
         int start_x = (int) ((x1 - 0.25)*2);
         int start_y = (int) ((y1 - 0.25)*2);
         int end_x = (int) ((x2 - 0.25)*2);
@@ -57,7 +57,6 @@ public:
         Node *start_node = new Node(start_x, start_y, 0, heuristic(start_x, start_y, end_x, end_y), nullptr);
         nodes[start_x][start_y] = start_node;
         open.push(start_node);
-//        auto start_time = chrono::high_resolution_clock::now();
         while (!open.empty()) {
             Node *current = open.top();
             open.pop();
@@ -74,6 +73,21 @@ public:
                     if (i + j != 1 && i + j != -1) continue;
                     if (i == 0 && j == 0) continue;
                     int x = current->x + i, y = current->y + j;
+                    // 是否携带物品
+                    if (isCarry){
+                        bool flag = false;
+                        for (int m = -1; m <= 1; ++m) {
+                            for (int n = -1; n <= 1; ++n) {
+                                if (x == 1 || x == 98) flag = true;
+                                if (y == 1 || y == 98) flag = true;
+                                if (maze[x+m][y+n] == 1) flag = true;
+                            }
+                        }
+                        if (flag){
+                            continue;
+                        }
+                    }
+
                     if (x < 0 || x >= rows || y < 0 || y >= cols || maze[x][y] == 1 || closed[x][y]) continue;
                     Node *neighbor;
                     int g = current->g + (i * j == 0 ? 1 : 2);
@@ -89,9 +103,6 @@ public:
                 }
             }
         }
-//        auto end_time = chrono::high_resolution_clock::now();
-//        auto duration = chrono::duration_cast<chrono::microseconds>(end_time - start_time);
-//        cout << "Time taken: " << duration.count() << " microseconds" << endl;
 
         if (path.empty()) return false;
         vector<vector<int>> offsets = {{1,0}, {0,1}, {-1,0}, {0,-1}};
@@ -99,35 +110,15 @@ public:
             int cur_x = path[i]->x;
             int cur_y = path[i]->y;
 
-            for (const auto &item: offsets){
-                if (maze[cur_x+item[0]][cur_y+item[1]] == 1 && maze[cur_x-item[0]][cur_y-item[1]] != 1){
-                    cur_x -= item[0];
-                    cur_y -= item[1];
+            if (!isCarry){
+                for (const auto &item: offsets){
+                    if (maze[cur_x+item[0]][cur_y+item[1]] == 1 && maze[cur_x-item[0]][cur_y-item[1]] != 1){
+                        cur_x -= item[0];
+                        cur_y -= item[1];
+                    }
                 }
             }
-
-//            int pre_x = -1;
-//            int pre_y = -1;
-//            int next_x = -1;
-//            int next_y = -1;
-//            if(i < path.size()-1) {
-//                pre_x=path[i + 1]->x;
-//                pre_y=path[i + 1]->y;
-//            }
-//            if(i > 1) {
-//                next_x=path[i - 1]->x;
-//                next_y=path[i - 1]->y;
-//            }
-//            int sum = 0;
-//            sum += abs(pre_x - cur_x) + abs(pre_y - cur_y);
-//            sum += abs(next_x - cur_x) + abs(next_y - cur_y);
-//            if (sum <= 2) {
-//                continue;
-//            }
-
             res.push_back({cur_x/2.0 + 0.25, cur_y/2.0 + 0.25});
-//            fprintf(stderr, "(%lf, %lf)", cur_x/2.0 + 0.25, cur_y/2.0 + 0.25);
-//            if (i > 0) fprintf(stderr, " -> ");
         }
 
         return true;

@@ -99,10 +99,10 @@ private:
 
     int path_step;
 
-    double linearKp = 5.0;
+    double linearKp = 6.0;
     double linearKi = 0.00;
     double linearKd = 0.02;
-    double angularKp = 6.0;
+    double angularKp = 10.0;
     double angularKi = 0.00;
     double angularKd = 0.15;
     double linearIntegral = 0.0, linearLastError;
@@ -182,9 +182,9 @@ public:
     vector<string> pathMove() {
         vector<string> res;
         int n = path.size();
-//        if (path_step == n-2){
-//            return pidMove(path[n-1][0], path[n-1][1]);
-//        }
+        if (path_step == n-1){
+            return pidMove(path[n-1][0], path[n-1][1]);
+        }
         for (; path_step < path.size(); ++path_step) {
             double targetX = path[path_step][0];
             double targetY = path[path_step][1];
@@ -217,7 +217,7 @@ public:
             // limit angular velocity to [-π, π]
             angularVelocity = max(-PI, min(PI, angularVelocity));
 //            if (path_step < path.size()-2) linearVelocity = max(4.0, linearVelocity);
-            if (abs(angularVelocity) > PI/2) linearVelocity /= 2.0;
+            if (abs(angularVelocity) > PI/2) linearVelocity = linearVelocity/2.0;
 //            if (path_step < n - 2 && distance < 1.0) linearVelocity /= 2.0;
             res.push_back("forward " + to_string(robotId) + " " + to_string(linearVelocity) + "\n");
             res.push_back("rotate " + to_string(robotId) + " " + to_string(cp * angularVelocity) + "\n");

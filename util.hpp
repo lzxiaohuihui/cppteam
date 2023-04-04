@@ -54,8 +54,7 @@ public:
     }
 
     static bool isCollisionWall(Robot robot, const vector<vector<int>>& data) {
-        double eps = 1.1;
-        for (double t = 0.0; t < 0.1; t += 0.02) {
+        for (double t = 0.0; t < 1.0; t += 0.02) {
             if (getPosition(robot, t)[0] < 0.5 || getPosition(robot, t)[0] > 49.5) {
                 return true;
             }
@@ -63,7 +62,7 @@ public:
                 return true;
             }
             vector<double> p = getPosition(robot, t);
-            vector<int> pos = {(int)p[0], (int)p[1]};
+            vector<int> pos = {(int)(p[0]-0.25)*2, (int)(p[1]-0.25)*2};
             if (data[pos[0]][pos[1]] == 1){
                 return true;
             }

@@ -11,7 +11,7 @@ int main(){
     vector<vector<char>> grid(100, vector<char>(100, 32));
 
     string line;
-    ifstream infile("/home/lzh/Downloads/huawei2023/LinuxRelease2/maps/4.txt"); // 打开文件
+    ifstream infile("/home/lzh/Downloads/huawei2023/LinuxRelease2/maps/1.txt"); // 打开文件
 
     int row = 99;
     while (getline(infile, line)) { // 逐行读取
@@ -47,10 +47,21 @@ int main(){
         }
     }
 
-    ofstream outfile("map4.txt");
-    for (int i = maze2.size() - 1; i >= 0; i--) {
-        for (int j = 0; j < maze2[i].size(); j++) {
-            if (maze2[j][i] == 1) outfile << '#';  // 输出元素
+    vector<vector<int>> maze3(200, vector<int>(200, 0));
+
+    for (int i = 99; i >= 0; i --) {
+        for (int j = 0; j < 100; j ++) {
+            maze3[2*j][2*i] = maze[j][i];
+            maze3[2*j+1][2*i] = maze[j][i];
+            maze3[2*j][2*i+1] = maze[j][i];
+            maze3[2*j+1][2*i+1] = maze[j][i];
+        }
+    }
+
+    ofstream outfile("scaleMap1.txt");
+    for (int i = maze3.size() - 1; i >= 0; i--) {
+        for (int j = 0; j < maze3[i].size(); j++) {
+            if (maze3[j][i] == 1) outfile << '#';  // 输出元素
             else outfile << ' ';
         }
         outfile << endl;

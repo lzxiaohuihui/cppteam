@@ -93,7 +93,7 @@ public:
                 if (workbench==w) continue;
                 vector<vector<double>> res;
                 bool succeed = pathPlanning->find_path(workbench->getX(), workbench->getY(), w->getX(), w->getY(),
-                                                       res);
+                                                       res, true);
                 if (succeed) {
                     pair<int,int> p(workbench->getWorkbenchId(), w->getWorkbenchId());
                     paths.insert(make_pair(p, res));
@@ -117,6 +117,7 @@ public:
         vector<string> orders;
 
         for (const auto &robot: robots) {
+            if (robot->getRobotId() == 3) continue;
             // 有没有目标都更新目标
             if (!robot->hasTarget() || false) {
                 // 没有货
@@ -197,7 +198,7 @@ public:
             double end_y = workbenches[20]->getY();
             vector<vector<double>> path;
 
-            bool succeed = pathPlanning->find_path(start_x, start_y, end_x, end_y, path);
+            bool succeed = pathPlanning->find_path(start_x, start_y, end_x, end_y, path,true);
             if (!succeed) return orders;
 
             robots[0]->setPath(path);
@@ -226,11 +227,11 @@ public:
             }
 
             if (c >= 49 && c <= 57) {
-                workbenches.push_back(new Workbench(countWorkbench++, c - '0', i / 2.0, (99 - num) / 2.0));
+                workbenches.push_back(new Workbench(countWorkbench++, c - '0', i / 2.0 + 0.25, (99 - num) / 2.0 + 0.25));
             }
 
             if (c == 'A') {
-                robots.push_back(new Robot(countRobot++, i / 2.0, (99 - num) / 2.0));
+                robots.push_back(new Robot(countRobot++, i / 2.0 + 0.25, (99 - num) / 2.0 + 0.25));
             }
 
         }

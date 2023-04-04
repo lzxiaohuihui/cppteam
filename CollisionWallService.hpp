@@ -25,14 +25,21 @@ public:
 
         for (int i = 0; i < num; ++i) {
             auto robot1 = robots[i];
-            if (Util::isCollisionWall(*robot1, data)){
-                vector<double> pos = robot1->getCurTarget();
-                double cp = Util::getCp(*robot1, pos[0], pos[1]);
 
-//                orders.push_back("forward " + to_string(robot1->getRobotId()) + " " + to_string(robot1->getV()/2) + "\n");
+            if(robot1->hasTarget()){
+                if (Util::isCollisionWall(*robot1, data)){
+                    orders.push_back("forward " + to_string(robot1->getRobotId()) + " " + to_string(2.0) + "\n");
+                    continue;
+                }
+            }
+//            orders.push_back("forward " + to_string(robot1->getRobotId()) + " " + to_string(0.0) + "\n");
+
+//                vector<double> pos = robot1->getCurTarget();
+//                double cp = Util::getCp(*robot1, pos[0], pos[1]);
+
 //                orders.push_back("rotate " + to_string(robot1->getRobotId()) + " " + to_string(1.0 * cp) + "\n");
 
-            }
+
         }
 
         return orders;

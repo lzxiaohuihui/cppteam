@@ -26,76 +26,15 @@ public:
                                 unordered_map<int, vector<int>> _sellTargets,
                                 unordered_map<int, vector<int>> _buyTargets,
                                 vector<vector<Workbench *>> _typeWorkbenches,
-                                const map<pair<int, int>, vector<vector<double>>>& _paths, aStar *_pathPlanning) :
+                                const map<pair<int, int>, vector<vector<double>>> &_paths, aStar *_pathPlanning) :
             robots(std::move(_robots)),
             workbenches(std::move(_workbenches)),
             sellTargets(std::move(_sellTargets)),
             buyTargets(std::move(_buyTargets)),
             typeWorkbenches(std::move(_typeWorkbenches)),
             pathPlanning(_pathPlanning) {
-            paths = _paths;
+        paths = _paths;
     }
-
-    struct cmpBuy {
-        Robot *robot;
-        aStar *pathPlanning;
-        map<pair<int, int>, vector<vector<double>>> paths;
-
-        cmpBuy(Robot *robot, aStar *pathPlanning, const map<pair<int, int>, vector<vector<double>>>& _paths) :
-                robot(robot), pathPlanning(pathPlanning) {
-            paths = _paths;
-        }
-
-        bool operator()(const Workbench *o1, const Workbench *o2) {
-            vector<vector<double>> path1(0);
-            vector<vector<double>> path2(0);
-            int d1 = 0;
-            int d2 = 0;
-            if (robot->getWorkbenchId() == -1) {
-                bool succeed1 = pathPlanning->find_path(robot->getX(), robot->getY(), o1->getX(), o1->getY(), path1);
-                bool succeed2 = pathPlanning->find_path(robot->getX(), robot->getY(), o2->getX(), o2->getY(), path2);
-                if (!succeed1) d1 += 9999;
-                if (!succeed2) d2 += 9999;
-            } else {
-                path1 = paths[make_pair(robot->getWorkbenchId(), o1->getWorkbenchId())];
-                path2 = paths[make_pair(robot->getWorkbenchId(), o2->getWorkbenchId())];
-            }
-            d1 += path1.size();
-            d2 += path2.size();
-            return d1 < d2;
-        }
-    };
-
-    struct cmpSell {
-        Robot *robot;
-        aStar *pathPlanning;
-        map<pair<int, int>, vector<vector<double>>> paths;
-
-        cmpSell(Robot *robot, aStar *pathPlanning, const map<pair<int, int>, vector<vector<double>>>& _paths) :
-                robot(robot), pathPlanning(pathPlanning) {
-            paths = _paths;
-        }
-
-        bool operator()(const Workbench *o1, const Workbench *o2) {
-            vector<vector<double>> path1(0);
-            vector<vector<double>> path2(0);
-            int d1 = 0;
-            int d2 = 0;
-            if (robot->getWorkbenchId() == -1) {
-                bool succeed1 = pathPlanning->find_path(robot->getX(), robot->getY(), o1->getX(), o1->getY(), path1);
-                bool succeed2 = pathPlanning->find_path(robot->getX(), robot->getY(), o2->getX(), o2->getY(), path2);
-                if (!succeed1) d1 += 9999;
-                if (!succeed2) d2 += 9999;
-            } else {
-                path1 = paths[make_pair(robot->getWorkbenchId(), o1->getWorkbenchId())];
-                path2 = paths[make_pair(robot->getWorkbenchId(), o2->getWorkbenchId())];
-            }
-            d1 += path1.size();
-            d2 += path2.size();
-            return d1 < d2;
-        }
-    };
-
 
     void findWorkbenchSell(int robotId, int frameId) override {
         auto start_time = chrono::high_resolution_clock::now();
@@ -113,17 +52,34 @@ public:
             if (!query) continue;
             workbenchList.push_back(workbench);
         }
-        std::sort(workbenchList.begin(), workbenchList.end(), cmpSell(robot, pathPlanning, paths));
+//        std::sort(workbenchList.begin(), workbenchList.end(), cmpSell(robot, pathPlanning, paths));
 
 
         if (workbenchList.empty()) {
             auto end_time = chrono::high_resolution_clock::now();
-            auto duration = chrono::duration_cast<chrono::milliseconds>(end_time - start_time);
-            fprintf(stderr, "\tfailed.[%ld milliseconds]\n", duration.count());
+            auto duration = chrono::duration_cast<chrono::microseconds>(end_time - start_time);
+            fprintf(stderr, "\tfailed.[%ld microseconds]\n", duration.count());
             return;
         }
-        for (auto &workbench: workbenchList) {
 
+        vector<pair<Workbench *, int>> ws;
+        for (const auto &item: workbenchList) {
+            int d = 0;
+            vector<vector<double>> path;
+            bool succeed = findPath(*robot, *item, path);
+            if (succeed) {
+                d = path.size();
+                ws.push_back(make_pair(item, d));
+            }
+        }
+
+        sort(ws.begin(), ws.end(), [](const pair<Workbench *, int> o1, const pair<Workbench *, int> o2) {
+            return o1.second < o2.second;
+        });
+
+
+        for (auto &item: ws) {
+            auto &workbench = item.first;
             vector<vector<double>> path;
             bool succeed = findPath(*robot, *workbench, path);
             if (succeed) {
@@ -131,17 +87,19 @@ public:
                 robot->setPath(path);
                 robot->setTargetWorkBenchId(workbenchId);
                 robot->pidClear();
-                workbench->setBuyLock(true);
+                if (workbench->getType() != 9) workbench->setSellLock(true, robot->getCarry());
                 auto end_time = chrono::high_resolution_clock::now();
-                auto duration = chrono::duration_cast<chrono::milliseconds>(end_time - start_time);
-                fprintf(stderr, "\tsucceed.[%ld milliseconds]\n", duration.count());
+                auto duration = chrono::duration_cast<chrono::microseconds>(end_time - start_time);
+                fprintf(stderr, "\tsucceed.[%ld microseconds]，workbench id is %d, type is %d, path size is %d\n",
+                        duration.count(),
+                        workbench->getWorkbenchId(), workbench->getType(), path.size());
                 break;
             }
         }
-        if(!robot->hasTarget()){
+        if (!robot->hasTarget()) {
             auto end_time = chrono::high_resolution_clock::now();
-            auto duration = chrono::duration_cast<chrono::milliseconds>(end_time - start_time);
-            fprintf(stderr, "\tfailed.[%ld milliseconds]\n", duration.count());
+            auto duration = chrono::duration_cast<chrono::microseconds>(end_time - start_time);
+            fprintf(stderr, "\tfailed.[%ld microseconds]\n", duration.count());
         }
     }
 
@@ -152,20 +110,36 @@ public:
         // 找距离当前最近的工作台
         vector<Workbench *> workbenchList;
         for (const auto &workbench: workbenches) {
-            bool query = !workbench->getIsBuyLock() && (workbench->getStatus() == 1 || workbench->getType() <=3);
+            bool query = !workbench->getIsBuyLock() && (workbench->getStatus() == 1 || workbench->getType() <= 3);
             if (!query) continue;
             workbenchList.push_back(workbench);
         }
-        std::sort(workbenchList.begin(), workbenchList.end(), cmpBuy(robot, pathPlanning, paths));
+//        std::sort(workbenchList.begin(), workbenchList.end(), cmpBuy(robot, pathPlanning, paths));
 
         if (workbenchList.empty()) {
             auto end_time = chrono::high_resolution_clock::now();
-            auto duration = chrono::duration_cast<chrono::milliseconds>(end_time - start_time);
-            fprintf(stderr, "\tfailed.[%ld milliseconds]\n", duration.count());
+            auto duration = chrono::duration_cast<chrono::microseconds>(end_time - start_time);
+            fprintf(stderr, "\tfailed.[%ld microseconds]\n", duration.count());
             return;
         }
 
-        for (auto &workbench: workbenchList) {
+        vector<pair<Workbench *, int>> ws;
+        for (const auto &item: workbenchList) {
+            int d = 0;
+            vector<vector<double>> path;
+            bool succeed = findPath(*robot, *item, path);
+            if (succeed) {
+                d = path.size();
+                ws.push_back(make_pair(item, d));
+            }
+        }
+
+        sort(ws.begin(), ws.end(), [](const pair<Workbench *, int> o1, const pair<Workbench *, int> o2) {
+            return o1.second < o2.second;
+        });
+
+        for (auto &item: ws) {
+            auto &workbench = item.first;
 
             int count = 0;
             for (const auto &w: workbenches) {
@@ -195,17 +169,18 @@ public:
                 robot->setPath(path);
                 robot->setTargetWorkBenchId(workbenchId);
                 robot->pidClear();
-                workbench->setBuyLock(true);
+                if (workbench->getType() > 3) workbench->setBuyLock(true);
                 auto end_time = chrono::high_resolution_clock::now();
-                auto duration = chrono::duration_cast<chrono::milliseconds>(end_time - start_time);
-                fprintf(stderr, "\tsucceed.[%ld milliseconds]\n", duration.count());
+                auto duration = chrono::duration_cast<chrono::microseconds>(end_time - start_time);
+                fprintf(stderr, "\tsucceed.[%ld microseconds]，workbench id is %d, type is %d, path size is %d\n", duration.count(),
+                        workbench->getWorkbenchId(), workbench->getType(), path.size());
                 break;
             }
         }
-        if(!robot->hasTarget()){
+        if (!robot->hasTarget()) {
             auto end_time = chrono::high_resolution_clock::now();
-            auto duration = chrono::duration_cast<chrono::milliseconds>(end_time - start_time);
-            fprintf(stderr, "\tfailed.[%ld milliseconds]\n", duration.count());
+            auto duration = chrono::duration_cast<chrono::microseconds>(end_time - start_time);
+            fprintf(stderr, "\tfailed.[%ld microseconds]\n", duration.count());
         }
 
     }
@@ -213,13 +188,14 @@ public:
     bool findPath(Robot &robot, Workbench &workbench, vector<vector<double>> &path) {
         bool succeed = true;
         if (robot.getWorkbenchId() == -1) {
-            succeed = pathPlanning->find_path(robot.getX(), robot.getY(), workbench.getX(), workbench.getY(), path);
-            fprintf(stderr, "\tget path from pathPlanning.");
+            succeed = pathPlanning->find_path(robot.getX(), robot.getY(), workbench.getX(), workbench.getY(), path,
+                                              true);
+//            fprintf(stderr, "\tget path from pathPlanning.");
         } else {
             path = paths[make_pair(robot.getWorkbenchId(), workbench.getWorkbenchId())];
-            fprintf(stderr, "\tget path from cache.");
+//            fprintf(stderr, "\tget path from cache.");
         }
-        return succeed;
+        return succeed && !path.empty();
     }
 
 };
