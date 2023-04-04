@@ -78,6 +78,7 @@ public:
                         bool flag = false;
                         for (int m = -1; m <= 1; ++m) {
                             for (int n = -1; n <= 1; ++n) {
+                                if (m+n != 1 && m+n != -1) continue;
                                 if (x == 1 || x == 98) flag = true;
                                 if (y == 1 || y == 98) flag = true;
                                 if (maze[x+m][y+n] == 1) flag = true;

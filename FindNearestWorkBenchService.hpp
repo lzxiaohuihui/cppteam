@@ -55,12 +55,6 @@ public:
 //        std::sort(workbenchList.begin(), workbenchList.end(), cmpSell(robot, pathPlanning, paths));
 
 
-        if (workbenchList.empty()) {
-            auto end_time = chrono::high_resolution_clock::now();
-            auto duration = chrono::duration_cast<chrono::microseconds>(end_time - start_time);
-            fprintf(stderr, "\tfailed.[%ld microseconds]\n", duration.count());
-            return;
-        }
 
         vector<pair<Workbench *, int>> ws;
         for (const auto &item: workbenchList) {
@@ -71,6 +65,13 @@ public:
                 d = path.size();
                 ws.push_back(make_pair(item, d));
             }
+        }
+
+        if (ws.empty()) {
+            auto end_time = chrono::high_resolution_clock::now();
+            auto duration = chrono::duration_cast<chrono::microseconds>(end_time - start_time);
+            fprintf(stderr, "\tfailed.no candidate workbench to sell [%ld microseconds]\n", duration.count());
+            return;
         }
 
         sort(ws.begin(), ws.end(), [](const pair<Workbench *, int> o1, const pair<Workbench *, int> o2) {
@@ -99,7 +100,7 @@ public:
         if (!robot->hasTarget()) {
             auto end_time = chrono::high_resolution_clock::now();
             auto duration = chrono::duration_cast<chrono::microseconds>(end_time - start_time);
-            fprintf(stderr, "\tfailed.[%ld microseconds]\n", duration.count());
+            fprintf(stderr, "\tfailed.path is not found [%ld microseconds]\n", duration.count());
         }
     }
 

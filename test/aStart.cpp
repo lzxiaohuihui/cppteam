@@ -53,6 +53,7 @@ vector<Node *> find_path(vector<vector<int>> &maze, double x1, double y1, double
                     bool flag = false;
                     for (int m = -1; m <= 1; ++m) {
                         for (int n = -1; n <= 1; ++n) {
+                            if (m + n != 1 && m + n != -1) continue;
                             if (x == 1 || x == 98) flag = true;
                             if (y == 1 || y == 98) flag = true;
                             if (maze[x+m][y+n] == 1) flag = true;
@@ -89,7 +90,7 @@ int main() {
     vector<vector<char>> grid(100, vector<char>(100, 32));
 
     string line;
-    ifstream infile("/home/lzh/Downloads/huawei2023/LinuxRelease2/maps/2.txt"); // 打开文件
+    ifstream infile("/home/lzh/Downloads/huawei2023/LinuxRelease2/maps/3.txt"); // 打开文件
 
     int row = 99;
     while (getline(infile, line)) { // 逐行读取
@@ -149,7 +150,8 @@ int main() {
 //    double start_x = 28.25, start_y = 44.75, end_x = 10.25, end_y = 24.75;
     // double start_x = 12.25, start_y = 44.75, end_x = 18.25, end_y = 48.75;
 //    double start_x = 2.75, start_y = 31.25, end_x = 19.25, end_y = 8.75;
-    double start_x = 9.25, start_y = 29.75, end_x = 25.25, end_y = 37.25;
+//    double start_x = 15.75, start_y = 25.75, end_x = 25.25, end_y = 23.25;
+    double start_x = 10.75, start_y = 24.25, end_x = 18.25, end_y = 14.25;
 
     vector<Node *> path = find_path(maze, start_x, start_y, end_x, end_y, true);
     if (path.empty()) {
@@ -160,16 +162,23 @@ int main() {
 //    grid[start_x * 2][start_y * 2] = 'S';
 
     vector<vector<int>> offsets = {{1,0}, {0,1}, {-1,0}, {0,-1}};
-    for (int i = path.size() - 1; i >= 0; --i) {
+    int pre_x = path[0]->x;
+    int pre_y = path[0]->y;
+    for (int i = path.size() - 2; i >= 0; --i) {
         int cur_x = path[i]->x;
         int cur_y = path[i]->y;
+
+//        if(pre_x == cur_x || pre_y == cur_y) continue;
+        pre_x = cur_x;
+        pre_y = cur_y;
+
 //
-//        for (const auto &item: offsets){
-//            if (maze[cur_x+item[0]][cur_y+item[1]] == 1 && maze[cur_x-item[0]][cur_y-item[1]] != 1){
-//                cur_x -= item[0];
-//                cur_y -= item[1];
-//            }
-//        }
+        for (const auto &item: offsets){
+            if (maze[cur_x+item[0]][cur_y+item[1]] == 1 && maze[cur_x-item[0]][cur_y-item[1]] != 1){
+                cur_x -= item[0];
+                cur_y -= item[1];
+            }
+        }
 
         cout << "(" << cur_x/2.0 + 0.25 << ", " << cur_y/2.0 + 0.25 << ")";
         if (i > 0) cout << " -> ";
@@ -179,7 +188,7 @@ int main() {
     cout << endl;
     cout << path.size() << endl;
 
-    ofstream outfile("data.txt");
+    ofstream outfile("data2.txt");
     for (int i = grid.size() - 1; i >= 0; i--) {
         for (int j = 0; j < grid[i].size(); j++) {
             outfile << grid[j][i];  // 输出元素
