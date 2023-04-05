@@ -43,11 +43,12 @@ public:
 
     }
 
-    bool find_path(double x1, double y1, double x2, double y2, vector<vector<double>>& res, bool isCarry) {
-        int start_x = (int) ((x1 - 0.25)*2);
-        int start_y = (int) ((y1 - 0.25)*2);
-        int end_x = (int) ((x2 - 0.25)*2);
-        int end_y = (int) ((y2 - 0.25)*2);
+    bool find_path(double x1, double y1, double x2, double y2, vector<vector<double>> &optimPath,
+                   vector<vector<double>> &originPath, bool isCarry) {
+        int start_x = (int) ((x1 - 0.25) * 2);
+        int start_y = (int) ((y1 - 0.25) * 2);
+        int end_x = (int) ((x2 - 0.25) * 2);
+        int end_y = (int) ((y2 - 0.25) * 2);
         vector<Node *> path;
         int rows = maze.size(), cols = maze[0].size();
         priority_queue<Node *, vector<Node *>, function<bool(Node *, Node *)>> open(
@@ -74,17 +75,17 @@ public:
                     if (i == 0 && j == 0) continue;
                     int x = current->x + i, y = current->y + j;
                     // 是否携带物品
-                    if (isCarry){
+                    if (isCarry) {
                         bool flag = false;
                         for (int m = -1; m <= 1; ++m) {
                             for (int n = -1; n <= 1; ++n) {
-                                if (m+n != 1 && m+n != -1) continue;
+                                if (m + n != 1 && m + n != -1) continue;
                                 if (x == 1 || x == 98) flag = true;
                                 if (y == 1 || y == 98) flag = true;
-                                if (maze[x+m][y+n] == 1) flag = true;
+                                if (maze[x + m][y + n] == 1) flag = true;
                             }
                         }
-                        if (flag){
+                        if (flag) {
                             continue;
                         }
                     }
@@ -106,21 +107,45 @@ public:
         }
 
         if (path.empty()) return false;
-        vector<vector<int>> offsets = {{1,0}, {0,1}, {-1,0}, {0,-1}};
+        vector<vector<int>> offsets = {{1,  0},
+                                       {0,  1},
+                                       {-1, 0},
+                                       {0,  -1},
+                                       {1,  1},
+                                       {1,  -1},
+                                       {-1, 1},
+                                       {-1, -1}};
+        int n = path.size();
+        int pre_x = path[n - 1]->x;
+        int pre_y = path[n - 1]->y;
+        optimPath.push_back({pre_x / 2.0 + 0.25, pre_y / 2.0 + 0.25});
         for (int i = path.size() - 1; i >= 0; --i) {
-            int cur_x = path[i]->x;
-            int cur_y = path[i]->y;
+            int &cur_x = path[i]->x;
+            int &cur_y = path[i]->y;
 
-            if (!isCarry){
-                for (const auto &item: offsets){
-                    if (maze[cur_x+item[0]][cur_y+item[1]] == 1 && maze[cur_x-item[0]][cur_y-item[1]] != 1){
+            if (cur_x > 0 && cur_x < 99 && cur_y > 0 && cur_y < 99) {
+                for (const auto &item: offsets) {
+                    if ((maze[cur_x + item[0]][cur_y + item[1]] == 1) && maze[cur_x - item[0]][cur_y - item[1]] != 1) {
                         cur_x -= item[0];
                         cur_y -= item[1];
                     }
                 }
             }
-            res.push_back({cur_x/2.0 + 0.25, cur_y/2.0 + 0.25});
+            originPath.push_back({cur_x / 2.0 + 0.25, cur_y / 2.0 + 0.25});
+
+            bool flag = hasObstacle(pre_x, pre_y, cur_x, cur_y);
+
+            if (!flag) {
+                continue;
+            }
+            pre_x = path[i]->x;
+            pre_y = path[i]->y;
+
+            if (i < n - 2) optimPath.push_back({path[i + 2]->x / 2.0 + 0.25, path[i + 2]->y / 2.0 + 0.25});
+            else if (i < n - 1) optimPath.push_back({path[i + 1]->x / 2.0 + 0.25, path[i + 1]->y / 2.0 + 0.25});
+            else optimPath.push_back({path[i]->x / 2.0 + 0.25, path[i]->y / 2.0 + 0.25});
         }
+        optimPath.push_back({path[0]->x / 2.0 + 0.25, path[0]->y / 2.0 + 0.25});
 
         return true;
 
@@ -129,6 +154,42 @@ public:
     int heuristic(int x1, int y1, int x2, int y2) {
         return abs(x1 - x2) + abs(y1 - y2);
     }
+
+    bool hasObstacle(int x1, int y1, int x2, int y2) {
+        int ROBOT_RADIUS = 0;
+        double OBSTACLE_RADIUS = 2.0;
+        // 判断AB线段是否经过障碍
+        int dx = abs(x1 - x2);
+        int dy = abs(y1 - y2);
+        int x = x1, y = y1;
+        int xstep = (x2 > x1) ? 1 : -1;
+        int ystep = (y2 > y1) ? 1 : -1;
+        int error = dx - dy;
+        while (x != x2 || y != y2) {
+            // 判断机器人是否在障碍物的半径范围内
+            for (int i = x - ROBOT_RADIUS - 1; i <= x + ROBOT_RADIUS + 1; i++) {
+                for (int j = y - ROBOT_RADIUS - 1; j <= y + ROBOT_RADIUS + 1; j++) {
+                    if (i >= 0 && i < 100 && j >= 0 && j < 100) {
+                        if (maze[i][j] == 1 &&
+                            sqrt((i - x) * (i - x) + (j - y) * (j - y)) <= OBSTACLE_RADIUS + ROBOT_RADIUS) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            int e2 = 2 * error;
+            if (e2 > -2 * dy) { // 将误差范围放大一些
+                error -= dy;
+                x += xstep;
+            }
+            if (e2 < 2 * dx) { // 将误差范围放大一些
+                error += dx;
+                y += ystep;
+            }
+        }
+        return false;
+    }
+
 };
 
 #endif //CODECRAFTSDK_ASTAR_HPP

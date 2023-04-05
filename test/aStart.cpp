@@ -84,13 +84,49 @@ vector<Node *> find_path(vector<vector<int>> &maze, double x1, double y1, double
     return path;
 }
 
+
+bool hasObstacle(vector<vector<int>> &maze, int x1, int y1, int x2, int y2) {
+    int ROBOT_RADIUS = 0;
+    double OBSTACLE_RADIUS = 2;
+// 判断AB线段是否经过障碍
+    int dx = abs(x1 - x2);
+    int dy = abs(y1 - y2);
+    int x = x1, y = y1;
+    int xstep = (x2 > x1) ? 1 : -1;
+    int ystep = (y2 > y1) ? 1 : -1;
+    int error = dx - dy;
+    while (x != x2 || y != y2) {
+// 判断机器人是否在障碍物的半径范围内
+        for (int i = x - ROBOT_RADIUS - 1; i <= x + ROBOT_RADIUS + 1; i++) {
+            for (int j = y - ROBOT_RADIUS - 1; j <= y + ROBOT_RADIUS + 1; j++) {
+                if (i >= 0 && i < 100 && j >= 0 && j < 100) {
+                    if (maze[i][j] == 1 && sqrt((i - x) * (i - x) + (j - y) * (j - y)) <= OBSTACLE_RADIUS + ROBOT_RADIUS) {
+                        return true;
+                    }
+                }
+            }
+        }
+        int e2 = 2 * error;
+        if (e2 > -2 * dy) { // 将误差范围放大一些
+            error -= dy;
+            x += xstep;
+        }
+        if (e2 < 2 * dx) { // 将误差范围放大一些
+            error += dx;
+            y += ystep;
+        }
+    }
+    return false;
+}
+
+
 int main() {
 
     vector<vector<int>> maze(100, vector<int>(100, 0));
     vector<vector<char>> grid(100, vector<char>(100, 32));
 
     string line;
-    ifstream infile("/home/lzh/Downloads/huawei2023/LinuxRelease2/maps/3.txt"); // 打开文件
+    ifstream infile("/home/lzh/Downloads/huawei2023/LinuxRelease2/maps/2.txt"); // 打开文件
 
     int row = 99;
     while (getline(infile, line)) { // 逐行读取
@@ -151,8 +187,9 @@ int main() {
     // double start_x = 12.25, start_y = 44.75, end_x = 18.25, end_y = 48.75;
 //    double start_x = 2.75, start_y = 31.25, end_x = 19.25, end_y = 8.75;
 //    double start_x = 15.75, start_y = 25.75, end_x = 25.25, end_y = 23.25;
-    double start_x = 10.75, start_y = 24.25, end_x = 18.25, end_y = 14.25;
-
+//    double start_x = 32.75, start_y = 29.25, end_x = 48.25, end_y = 5.25;
+    double start_x = 9.25, start_y = 29.25, end_x = 25.25, end_y = 37.25;
+//    double start_x = 17.25, start_y = 17.25, end_x = 9.25, end_y = 29.25;
     vector<Node *> path = find_path(maze, start_x, start_y, end_x, end_y, true);
     if (path.empty()) {
         cout << "No path found" << endl;
@@ -161,16 +198,15 @@ int main() {
 
 //    grid[start_x * 2][start_y * 2] = 'S';
 
-    vector<vector<int>> offsets = {{1,0}, {0,1}, {-1,0}, {0,-1}};
-    int pre_x = path[0]->x;
-    int pre_y = path[0]->y;
+    vector<vector<int>> offsets = {{1,0}, {0,1}, {-1,0}, {0,-1}, {1,1},{1,-1},{-1,1},{-1,-1}};
+    int n = path.size();
+    int len = 0;
+    double pre_x = path[n-1]->x;
+    double pre_y = path[n-1]->y;
     for (int i = path.size() - 2; i >= 0; --i) {
-        int cur_x = path[i]->x;
-        int cur_y = path[i]->y;
+        int &cur_x = path[i]->x;
+        int &cur_y = path[i]->y;
 
-//        if(pre_x == cur_x || pre_y == cur_y) continue;
-        pre_x = cur_x;
-        pre_y = cur_y;
 
 //
         for (const auto &item: offsets){
@@ -180,13 +216,37 @@ int main() {
             }
         }
 
-        cout << "(" << cur_x/2.0 + 0.25 << ", " << cur_y/2.0 + 0.25 << ")";
-        if (i > 0) cout << " -> ";
-        grid[cur_x][cur_y] = '*';
-//        grid3[cur_x][cur_y] = '*';
+        printf ("判断(%f, %f) -> (%d, %d)是否有障碍.", pre_x, pre_y, cur_x, cur_y);
+
+        bool flag = hasObstacle(maze, pre_x, pre_y, cur_x, cur_y);
+
+        if (!flag) {
+            printf ("no\n");
+            continue;
+        }
+
+
+
+//        cout << "(" << cur_x/2.0 + 0.25  << ", " << cur_y/2.0+0.25 << ")";
+//        cout << " -> ";
+//        grid[path[i-1]->x][path[i-1]->y] = '*';
+//        grid[pre_x][pre_y] = '*';
+//        grid[path[i]->x][path[i]->y] = '*';
+//        grid[path[i+1]->x][path[i+1]->y] = '*';
+        grid[path[i+2]->x][path[i+2]->y] = '*';
+//        grid[path[i+3]->x][path[i+3]->y] = '*';
+//        grid[cur_x][cur_y] = '*';
+//        grid[pre_x][pre_y] = '*';
+        len += 1;
+        pre_x = path[i]->x;
+        pre_y = path[i]->y;
+        printf ("yes\n");
     }
+    grid[path[n-1]->x][path[n-1]->y] = '*';
+    grid[path[0]->x][path[0]->y] = '*';
+
     cout << endl;
-    cout << path.size() << endl;
+    cout << len << endl;
 
     ofstream outfile("data2.txt");
     for (int i = grid.size() - 1; i >= 0; i--) {
@@ -200,3 +260,4 @@ int main() {
 
     return 0;
 }
+

@@ -77,6 +77,8 @@ private:
      */
     int needCount;
 
+    bool canBuy = false;
+
 public:
     
     void updateWorkbench(const string& line) {
@@ -196,6 +198,14 @@ public:
 
     int getNeedCount() {
         return needCount;
+    }
+
+    bool isCanBuy() const{
+        return canBuy;
+    }
+
+    void setCanBuy(bool b){
+        canBuy = b;
     }
 };
 

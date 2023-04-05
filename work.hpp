@@ -16,6 +16,7 @@
 #include "aStar.hpp"
 #include "CollisionWallService.hpp"
 #include "FindWorkBenchService.hpp"
+#include "FindBestWorkbenchService.hpp"
 
 
 class Work {
@@ -35,7 +36,8 @@ private:
     FindWorkBenchService *findWorkBenchService;
     CollisionWallService *collisionService;
     aStar *pathPlanning;
-    map<pair<int, int>, vector<vector<double>>> paths;
+    map<pair<int, int>, vector<vector<double>>> originCarryPaths;
+    map<pair<int, int>, vector<vector<double>>> optimCarryPaths;
     unordered_map<int, vector<int>> sellTargets;
     unordered_map<int, vector<int>> buyTargets;
     vector<vector<Workbench *>> typeWorkbenches;
@@ -87,20 +89,51 @@ public:
 
 
         fprintf(stderr, "init paths.");
+        auto start_time = chrono::high_resolution_clock::now();
         // workbench --> w
         for (const auto &workbench: workbenches) {
             for (const auto &w: workbenches) {
                 if (workbench==w) continue;
-                vector<vector<double>> res;
-                bool succeed = pathPlanning->find_path(workbench->getX(), workbench->getY(), w->getX(), w->getY(),
-                                                       res, true);
-                if (succeed) {
+                vector<vector<double>> res1;
+                vector<vector<double>> res2;
+                bool succeed1 = pathPlanning->find_path(workbench->getX(), workbench->getY(), w->getX(), w->getY(),
+                                                       res1, res2, true);
+                if (succeed1) {
                     pair<int,int> p(workbench->getWorkbenchId(), w->getWorkbenchId());
-                    paths.insert(make_pair(p, res));
+                    optimCarryPaths.insert(make_pair(p, res1));
+                    originCarryPaths.insert(make_pair(p, res2));
                 }
             }
         }
-        fprintf(stderr, "[OK]\n");
+        auto end_time = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::milliseconds>(end_time - start_time);
+        fprintf(stderr, "[OK][%ld milliseconds]\n", duration.count());
+
+        fprintf(stderr, "init workbench can buy", duration.count());
+        start_time = chrono::high_resolution_clock::now();
+        // 标记买了这个工作台，能不能卖出去
+        for (int i = 1; i < 4; ++i) {
+//            workbench -> w
+            for (auto &workbench: typeWorkbenches[i]){
+                bool b = false;
+                for (const auto &j: sellTargets[i]){
+                    for (const auto &w: typeWorkbenches[j]){
+                        pair<int,int> p(workbench->getWorkbenchId(), w->getWorkbenchId());
+                        if (!originCarryPaths[p].empty()){
+                            workbench->setCanBuy(true);
+                            b = true;
+                            break;
+                        }
+                    }
+                    if (b) break;
+                }
+                if (!b) fprintf(stderr, "工作台%d不能购买. ", workbench->getWorkbenchId());
+            }
+        }
+
+        end_time = chrono::high_resolution_clock::now();
+        duration = chrono::duration_cast<chrono::milliseconds>(end_time - start_time);
+        fprintf(stderr, "[OK][%ld milliseconds]\n", duration.count());
 
         fprintf(stderr, "init collisionService.");
         collisionService = new CollisionWallService(maze);
@@ -108,7 +141,9 @@ public:
 
         fprintf(stderr, "init findWorkBenchService.");
         findWorkBenchService = new FindNearestWorkBenchService(robots, workbenches, sellTargets, buyTargets,
-                                                               typeWorkbenches, paths, pathPlanning);
+                                                               typeWorkbenches, originCarryPaths,optimCarryPaths, pathPlanning);
+//        findWorkBenchService = new FindBestWorkbenchService(robots, workbenches, sellTargets, buyTargets,
+//                                                               typeWorkbenches, originCarryPaths,optimCarryPaths, pathPlanning);
         fprintf(stderr, "[OK]\n");
 
     }
@@ -198,8 +233,8 @@ public:
             double end_y = workbenches[20]->getY();
             vector<vector<double>> path;
 
-            bool succeed = pathPlanning->find_path(start_x, start_y, end_x, end_y, path,true);
-            if (!succeed) return orders;
+//            bool succeed = pathPlanning->find_path(start_x, start_y, end_x, end_y, path,true);
+//            if (!succeed) return orders;
 
             robots[0]->setPath(path);
         }

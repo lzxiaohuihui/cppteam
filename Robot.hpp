@@ -181,10 +181,10 @@ public:
 
     vector<string> pathMove() {
         vector<string> res;
-        int n = path.size();
-        if (path_step == n-1){
-            return pidMove(path[n-1][0], path[n-1][1]);
-        }
+//        int n = path.size();
+//        if (path_step == n-1){
+//            return pidMove(path[n-1][0], path[n-1][1]);
+//        }
         for (; path_step < path.size(); ++path_step) {
             double targetX = path[path_step][0];
             double targetY = path[path_step][1];
@@ -201,8 +201,8 @@ public:
             cp = cp == 0 ? 0 : cp / abs(cp);
             double angle = acos(dp / sqrt(pow(targetX - x, 2) + pow(targetY - y, 2) + 0.001));
 
-//            double linearError = distance * tan(PI/2 - angle);
-            double linearError = distance * cos(angle);
+            double linearError = distance * tan(PI/2 - angle);
+//            double linearError = distance * cos(angle) / 2;
             linearIntegral += linearError;
             angularIntegral += angle;
             double linearDerivative = linearError - linearLastError;
@@ -212,12 +212,12 @@ public:
             double linearVelocity = linearKp * linearError + linearKi * linearIntegral + linearKd * linearDerivative;
             double angularVelocity = angularKp * angle + angularKi * angularIntegral + angularKd * angularDerivative;
             // limit linear velocity to [-2, 6]
-            linearVelocity = max(2.0, min(6.0, linearVelocity));
+            linearVelocity = max(-2.0, min(6.0, linearVelocity));
 
             // limit angular velocity to [-π, π]
             angularVelocity = max(-PI, min(PI, angularVelocity));
 //            if (path_step < path.size()-2) linearVelocity = max(4.0, linearVelocity);
-            if (abs(angularVelocity) > PI/2) linearVelocity = linearVelocity/2.0;
+            if (abs(angularVelocity) > PI/4) linearVelocity /= 2.0;
 //            if (path_step < n - 2 && distance < 1.0) linearVelocity /= 2.0;
             res.push_back("forward " + to_string(robotId) + " " + to_string(linearVelocity) + "\n");
             res.push_back("rotate " + to_string(robotId) + " " + to_string(cp * angularVelocity) + "\n");
