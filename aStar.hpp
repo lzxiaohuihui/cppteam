@@ -123,14 +123,14 @@ public:
             int &cur_x = path[i]->x;
             int &cur_y = path[i]->y;
 
-            if (cur_x > 0 && cur_x < 99 && cur_y > 0 && cur_y < 99) {
-                for (const auto &item: offsets) {
-                    if ((maze[cur_x + item[0]][cur_y + item[1]] == 1) && maze[cur_x - item[0]][cur_y - item[1]] != 1) {
-                        cur_x -= item[0];
-                        cur_y -= item[1];
-                    }
-                }
-            }
+//            if (cur_x > 0 && cur_x < 99 && cur_y > 0 && cur_y < 99) {
+//                for (const auto &item: offsets) {
+//                    if ((maze[cur_x + item[0]][cur_y + item[1]] == 1) && maze[cur_x - item[0]][cur_y - item[1]] != 1) {
+//                        cur_x -= item[0];
+//                        cur_y -= item[1];
+//                    }
+//                }
+//            }
             originPath.push_back({cur_x / 2.0 + 0.25, cur_y / 2.0 + 0.25});
 
             bool flag = hasObstacle(pre_x, pre_y, cur_x, cur_y);
@@ -141,9 +141,21 @@ public:
             pre_x = path[i]->x;
             pre_y = path[i]->y;
 
-            if (i < n - 2) optimPath.push_back({path[i + 2]->x / 2.0 + 0.25, path[i + 2]->y / 2.0 + 0.25});
-            else if (i < n - 1) optimPath.push_back({path[i + 1]->x / 2.0 + 0.25, path[i + 1]->y / 2.0 + 0.25});
-            else optimPath.push_back({path[i]->x / 2.0 + 0.25, path[i]->y / 2.0 + 0.25});
+            if (i < n - 2) {
+                int px = path[i + 2]->x, py = path[i + 2]->y;
+                double target_x = px, target_y = py;
+                if (px > 0 && px < 99 && py > 0 && py < 99) {
+                    for (const auto &item: offsets) {
+                        if ((maze[px + item[0]][py + item[1]] == 1) && maze[px - item[0]][py - item[1]] != 1) {
+                            target_x -= item[0]/2.0;
+                            target_y -= item[1]/2.0;
+                        }
+                    }
+                }
+                optimPath.push_back({target_x / 2.0 + 0.25, target_y / 2.0 + 0.25});
+            }
+//            else if (i < n - 1) optimPath.push_back({path[i + 1]->x / 2.0 + 0.25, path[i + 1]->y / 2.0 + 0.25});
+//            else optimPath.push_back({path[i]->x / 2.0 + 0.25, path[i]->y / 2.0 + 0.25});
         }
         optimPath.push_back({path[0]->x / 2.0 + 0.25, path[0]->y / 2.0 + 0.25});
 

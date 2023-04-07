@@ -34,7 +34,7 @@ private:
     BuyAndSellService *buyAndSellService = new BuyAndSellService;
 //    FindNearestWorkBenchService *findNearestWorkBenchService = new FindNearestWorkBenchService();
     FindWorkBenchService *findWorkBenchService;
-    CollisionWallService *collisionService;
+    CollisionService *collisionService;
     aStar *pathPlanning;
     map<pair<int, int>, vector<vector<double>>> originCarryPaths;
     map<pair<int, int>, vector<vector<double>>> optimCarryPaths;
@@ -136,7 +136,8 @@ public:
         fprintf(stderr, "[OK][%ld milliseconds]\n", duration.count());
 
         fprintf(stderr, "init collisionService.");
-        collisionService = new CollisionWallService(maze);
+//        collisionService = new CollisionWallService(maze);
+        collisionService = new CollisionService();
         fprintf(stderr, "[OK]\n");
 
         fprintf(stderr, "init findWorkBenchService.");
@@ -152,7 +153,7 @@ public:
         vector<string> orders;
 
         for (const auto &robot: robots) {
-            if (robot->getRobotId() == 3) continue;
+//            if (robot->getRobotId() == 3) continue;
             // 有没有目标都更新目标
             if (!robot->hasTarget() || false) {
                 // 没有货
@@ -175,16 +176,16 @@ public:
                     if (isBuy) {
                         robot->pidClear();
                         orders.push_back("buy " + to_string(robot->getRobotId()) + "\n");
-                        findWorkBenchService->findWorkbenchSell(robot->getRobotId(), frameId);
-//                        // 买了货，机器人去新的目的地卖货
 //                        findWorkBenchService->findWorkbenchSell(robot->getRobotId(), frameId);
-//                        // 判断够不够时间，然后再去买
-//                        if (robot->hasTarget() &&
-//                            isEnoughTime(*robot, *workbenches[robot->getTargetWorkBenchId()], frameId)) {
-//                            orders.push_back("buy " + to_string(robot->getRobotId()) + "\n");
-//                        } else {
-//                            buyAndSellService->cancelBuy(robot);
-//                        }
+                        // 买了货，机器人去新的目的地卖货
+                        findWorkBenchService->findWorkbenchSell(robot->getRobotId(), frameId);
+                        // 判断够不够时间，然后再去买
+                        if (robot->hasTarget() &&
+                            isEnoughTime(*robot, *workbenches[robot->getTargetWorkBenchId()], frameId)) {
+                            orders.push_back("buy " + to_string(robot->getRobotId()) + "\n");
+                        } else {
+                            buyAndSellService->cancelBuy(robot);
+                        }
 
                     }
 
@@ -216,8 +217,8 @@ public:
         }
 
         // 避免碰撞
-//        vector<string> a = collisionService->avoid(robots, workbenches);
-//        orders.insert(orders.end(), a.begin(), a.end());
+        vector<string> a = collisionService->avoid(robots, workbenches);
+        orders.insert(orders.end(), a.begin(), a.end());
 
         return orders;
     }

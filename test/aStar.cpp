@@ -127,6 +127,16 @@ int main() {
 
     string line;
     ifstream infile("/home/lzh/Downloads/huawei2023/LinuxRelease2/maps/2.txt"); // 打开文件
+//    double start_x = 24.25, start_y = 48.75, end_x = 43.25, end_y = 9.75;
+//    double start_x = 28.25, start_y = 44.75, end_x = 10.25, end_y = 24.75;
+    // double start_x = 12.25, start_y = 44.75, end_x = 18.25, end_y = 48.75;
+//    double start_x = 2.75, start_y = 31.25, end_x = 19.25, end_y = 8.75;
+//    double start_x = 15.75, start_y = 25.75, end_x = 25.25, end_y = 23.25;
+//    double start_x = 32.75, start_y = 29.25, end_x = 48.25, end_y = 5.25;
+//    double start_x = 9.25, start_y = 29.25, end_x = 16.03, end_y = 26.81;
+//    double start_x = 16.03, start_y = 26.81, end_x = 9.25, end_y = 29.25;
+    double start_x = 17.25, start_y = 9.75, end_x = 40.75, end_y = 29.25;
+//    double start_x = 17.25, start_y = 17.25, end_x = 9.25, end_y = 29.25;
 
     int row = 99;
     while (getline(infile, line)) { // 逐行读取
@@ -182,15 +192,7 @@ int main() {
 
 
 
-//    double start_x = 24.25, start_y = 48.75, end_x = 43.25, end_y = 9.75;
-//    double start_x = 28.25, start_y = 44.75, end_x = 10.25, end_y = 24.75;
-    // double start_x = 12.25, start_y = 44.75, end_x = 18.25, end_y = 48.75;
-//    double start_x = 2.75, start_y = 31.25, end_x = 19.25, end_y = 8.75;
-//    double start_x = 15.75, start_y = 25.75, end_x = 25.25, end_y = 23.25;
-//    double start_x = 32.75, start_y = 29.25, end_x = 48.25, end_y = 5.25;
-    double start_x = 9.25, start_y = 29.25, end_x = 25.25, end_y = 37.25;
-//    double start_x = 17.25, start_y = 17.25, end_x = 9.25, end_y = 29.25;
-    vector<Node *> path = find_path(maze, start_x, start_y, end_x, end_y, true);
+    vector<Node *> path = find_path(maze, start_x, start_y, end_x, end_y, false);
     if (path.empty()) {
         cout << "No path found" << endl;
         return 0;
@@ -209,21 +211,21 @@ int main() {
 
 
 //
-        for (const auto &item: offsets){
-            if (maze[cur_x+item[0]][cur_y+item[1]] == 1 && maze[cur_x-item[0]][cur_y-item[1]] != 1){
-                cur_x -= item[0];
-                cur_y -= item[1];
-            }
-        }
+//        for (const auto &item: offsets){
+//            if (maze[cur_x+item[0]][cur_y+item[1]] == 1 && maze[cur_x-item[0]][cur_y-item[1]] != 1){
+//                cur_x -= item[0];
+//                cur_y -= item[1];
+//            }
+//        }
 
         printf ("判断(%f, %f) -> (%d, %d)是否有障碍.", pre_x, pre_y, cur_x, cur_y);
 
         bool flag = hasObstacle(maze, pre_x, pre_y, cur_x, cur_y);
-
-        if (!flag) {
-            printf ("no\n");
-            continue;
-        }
+//
+//        if (!flag) {
+//            printf ("no\n");
+//            continue;
+//        }
 
 
 
@@ -231,9 +233,9 @@ int main() {
 //        cout << " -> ";
 //        grid[path[i-1]->x][path[i-1]->y] = '*';
 //        grid[pre_x][pre_y] = '*';
-//        grid[path[i]->x][path[i]->y] = '*';
+        grid[path[i]->x][path[i]->y] = '*';
 //        grid[path[i+1]->x][path[i+1]->y] = '*';
-        grid[path[i+2]->x][path[i+2]->y] = '*';
+//        grid[path[i+2]->x][path[i+2]->y] = '*';
 //        grid[path[i+3]->x][path[i+3]->y] = '*';
 //        grid[cur_x][cur_y] = '*';
 //        grid[pre_x][pre_y] = '*';

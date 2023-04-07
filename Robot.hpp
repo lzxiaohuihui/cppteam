@@ -191,7 +191,7 @@ public:
 //            fprintf(stderr, "(x:%lf, y%lf)->(target_x: %lf, target_y: %lf)\n", x, y, targetX, targetY);
 //            if (robotId == 0) fprintf(stderr, "%d robot step: %d\n", robotId, path_step);
             double distance = sqrt(pow(targetX - x, 2) + pow(targetY - y, 2));
-            if (distance <= 0.5 && path_step < path.size()-1) continue;
+            if (distance <= 0.45 && path_step < path.size()-1) continue;
             if (distance < 0.4 && path_step == path.size()-1) return {};
             double cosTheta = cos(orientation);
             double sinTheta = sin(orientation);

@@ -171,7 +171,7 @@ public:
             vector<vector<double>> path, optimPath;
             bool succeed = findPathBuy(*robot, *workbench, path, optimPath);
             if (succeed) {
-                robot->setPath(path);
+                robot->setPath(optimPath);
                 robot->setTargetWorkBenchId(workbenchId);
                 robot->pidClear();
                 if (workbench->getType() > 3) workbench->setBuyLock(true);
